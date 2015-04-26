@@ -75,6 +75,12 @@ prop_three_matrix_multiply_dims (Positive a) (Positive b) (Positive c) (Positive
 list_to_matrix :: Int -> Int -> [Int] -> Matrix Int
 list_to_matrix w h l = fromList w h $ cycle (1:l)
 
+prop_even_a_plus_a :: [Int] -> Bool
+prop_even_a_plus_a list = result == (zero 11 7) where
+  result = evaluateMatrixExpr expr env 2
+  expr = (Sum (Variable "a") (Variable "a"))
+  env s = list_to_matrix 11 7 list
+
 prop_sums_mod_three :: [Int] -> Bool
 prop_sums_mod_three list = result == (zero (nrows m) (ncols m)) where
   result = evaluateMatrixExpr expr env 3
@@ -87,7 +93,6 @@ prop_symetric_a_t_a list = result == (transpose result) where
   result = evaluateMatrixExpr expr env 19
   expr = (MatrixMultiply (Variable "a") (Transpose (Variable "a")))
   env s = list_to_matrix 11 7 list
-
 
 -- return [] is TemplateHaskell magic to list the properties.
 return []
