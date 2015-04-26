@@ -1,3 +1,8 @@
+module MatrixGrammar (
+  MatrixExpr(Variable,Value,
+             Transpose,RowSum,ColSum,RowRepeat,ColRepeat,
+             Sum,MatrixMultiply,ElementwiseMultiply),
+  matrixExprDimensions, evaluateMatrixExpr) where
 import Control.Applicative
 import Data.Matrix
 
@@ -37,8 +42,8 @@ matrixExprDimensions expr varDims = iter expr where
   sameDimensions _ _ = Nothing
 
 -- Evaluate matrix expression mod p
-evaluateMatrix :: MatrixExpr -> (String -> Matrix Int) -> Int -> Matrix Int
-evaluateMatrix expr env p = f expr where 
+evaluateMatrixExpr :: MatrixExpr -> (String -> Matrix Int) -> Int -> Matrix Int
+evaluateMatrixExpr expr env p = f expr where
   f expr = fmap (`mod`p) (g expr)
   g (Variable v) = env v
   g (Value m) = m
