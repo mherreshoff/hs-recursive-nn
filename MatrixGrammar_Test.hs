@@ -8,8 +8,6 @@ import Test.QuickCheck.Modifiers
   (Positive(Positive), NonEmptyList, getNonEmpty)
 import Test.QuickCheck.All (quickCheckAll)
 
-list_to_matrix w h l = fromList w h $ cycle (1:l)
-
 -- matrixExprDimensions tests:
 dummy_var_dims s = (-1, -1)
 
@@ -74,6 +72,9 @@ prop_three_matrix_multiply_dims (Positive a) (Positive b) (Positive c) (Positive
   v x y = Value $ zero x y
 
 -- evaluateMatrixExpr tests:
+list_to_matrix :: Int -> Int -> [Int] -> Matrix Int
+list_to_matrix w h l = fromList w h $ cycle (1:l)
+
 prop_sums_mod_three :: [Int] -> Bool
 prop_sums_mod_three list = result == (zero (nrows m) (ncols m)) where
   result = evaluateMatrixExpr expr env 3
