@@ -83,6 +83,16 @@ prop_matrix_multiply_dims pa pb pc = result == Just (a, c) where
   b = getPositive pb
   c = getPositive pc
 
+prop_three_matrix_multiply_dims :: Positive Int -> Positive Int -> Positive Int -> Positive Int -> Bool
+prop_three_matrix_multiply_dims pa pb pc pd = result == Just (a, d) where
+  result = matrixExprDimensions expr dummy_var_dims
+  expr = MatrixMultiply (v a b) (MatrixMultiply (v b c) (v c d))
+  v x y = Value $ zero x y
+  a = getPositive pa
+  b = getPositive pb
+  c = getPositive pc
+  d = getPositive pd
+
 -- evaluateMatrixExpr tests:
 prop_sums_mod_three :: [Int] -> Bool
 prop_sums_mod_three list = result == (zero (nrows m) (ncols m)) where
