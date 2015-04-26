@@ -94,6 +94,18 @@ prop_symetric_a_t_a list = result == (transpose result) where
   expr = (MatrixMultiply (Variable "a") (Transpose (Variable "a")))
   env s = list_to_matrix 11 7 list
 
+prop_multiply_preserves_det :: [Int] -> [Int] -> Bool
+prop_multiply_preserves_det l1 l2 = result == mod (d1*d2) 19 where
+  result = (`mod`19) $ detLaplace $ evaluateMatrixExpr expr env 19
+  expr = MatrixMultiply (Variable "a") (Variable "b")
+  m1 = list_to_matrix 5 5 l1
+  m2 = list_to_matrix 5 5 l2
+  d1 = (`mod`19) $ detLaplace m1
+  d2 = (`mod`19) $ detLaplace m2
+  env "a" = m1
+  env "b" = m2
+
+
 -- return [] is TemplateHaskell magic to list the properties.
 return []
 main = $quickCheckAll
