@@ -10,6 +10,9 @@ import Test.QuickCheck.All (quickCheckAll)
 
 list_to_matrix w h l = fromList w h $ cycle (1:l)
 
+-- matrixExprDimensions tests:
+
+-- evaluateMatrixExpr tests:
 prop_sums_mod_three :: [Int] -> Bool
 prop_sums_mod_three list = result == (zero (nrows m) (ncols m)) where 
   result = evaluateMatrixExpr expr env 3
@@ -17,8 +20,8 @@ prop_sums_mod_three list = result == (zero (nrows m) (ncols m)) where
   env s = m
   m = list_to_matrix 14 8 list
 
-symetric_a_t_a :: [Int] -> Bool
-symetric_a_t_a list = result == (transpose result) where
+prop_symetric_a_t_a :: [Int] -> Bool
+prop_symetric_a_t_a list = result == (transpose result) where
   result = evaluateMatrixExpr expr env 19
   expr = (MatrixMultiply (Variable "a") (Transpose (Variable "a")))
   env s = list_to_matrix 11 7 list
