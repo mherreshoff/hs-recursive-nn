@@ -68,7 +68,7 @@ evaluateMatrixExpr expr env p = f expr where
   g (ElementwiseMultiply e1 e2) = elementwise (*) (f e1) (f e2)
   g (MatrixMultiply e1 e2) = multStd (f e1) (f e2)
 
--- Valid expressions
+-- Generic Tree operations
 matrixExprTreeView :: MatrixExpr -> Tree MatrixExpr
 matrixExprTreeView = unfoldTree (\x -> (x, children x)) where
   children (Variable v) = []
@@ -82,6 +82,13 @@ matrixExprTreeView = unfoldTree (\x -> (x, children x)) where
   children (ElementwiseMultiply e1 e2) = [e1, e2]
   children (MatrixMultiply e1 e2) = [e1, e2]
 
+matrixExprDepth :: MatrixExpr -> Int
+matrixExprDepth = length . levels . matrixExprTreeView
+
+matrixSubExprs :: MatrixExpr -> [MatrixExpr]
+matrixSubExprs = flatten . matrixExprTreeView
+
+matrixExprSyntaxTree :: MatrixExpr -> Tree String
 matrixExprSyntaxTree = (fmap f) . matrixExprTreeView where
   f (Variable v) = v
   f (Value m) = show m
@@ -94,11 +101,7 @@ matrixExprSyntaxTree = (fmap f) . matrixExprTreeView where
   f (ElementwiseMultiply _ _) = ".*"
   f (MatrixMultiply _ _) = "*"
 
-matrixExprDepth :: MatrixExpr -> Int
-matrixExprDepth = length . levels . matrixExprTreeView
-matrixSubExprs :: MatrixExpr -> [MatrixExpr]
-matrixSubExprs = flatten . matrixExprTreeView
-
+-- Valid expressions
 validOneVariableExpr :: (Int, Int) -> Int -> [MatrixExpr]
 validOneVariableExpr _ 1 = [(Variable "a")]
 validOneVariableExpr dims n | n > 1 = result where
