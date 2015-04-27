@@ -11,18 +11,33 @@ import Test.QuickCheck.All (quickCheckAll)
 -- matrixExprDepth tests
 
 prop_symbol_depth_one :: String -> Bool
-prop_symbol_depth_one s = (1==) $ matrixExprDepth (Variable s)
+prop_symbol_depth_one s = 1 == matrixExprDepth (Variable s)
 
 prop_matrix_depth_one :: [Int] -> Bool
-prop_matrix_depth_one list = (1==) $ matrixExprDepth (Value (list_to_matrix 5 5 list))
+prop_matrix_depth_one list = 1 == matrixExprDepth (Value (list_to_matrix 5 5 list))
 
 prop_symbol_sum_depth_two :: String -> String -> Bool
-prop_symbol_sum_depth_two s1 s2 = (2==) $ matrixExprDepth (Sum (Variable s1) (Variable s2))
+prop_symbol_sum_depth_two s1 s2 =  2 == matrixExprDepth (Sum (Variable s1) (Variable s2))
 
-prob_buildable_depth :: Positive Int -> String -> Bool
-prob_buildable_depth (Positive d) s = (d==) $ matrixExprDepth (build d) where
-  build 1 = Variable s
-  build n | n > 1 = Transpose (build (n-1))
+transposeStack n = iterate Transpose (Variable "a") !! n
+
+prop_buildable_depth :: Positive Int -> Bool
+prop_buildable_depth (Positive d) = d+1 == matrixExprDepth (transposeStack d)
+
+prop_subexpr_count_correct :: Positive Int -> Bool
+prop_subexpr_count_correct (Positive d) = d+1 == length (matrixSubExprs (transposeStack d))
+
+branchingStack n n' = iterate Transpose branch !! n where
+  branch = Sum x x
+  x = transposeStack n'
+
+prop_buildable_depth_fork :: Positive Int -> Positive Int -> Bool
+prop_buildable_depth_fork (Positive n) (Positive n') =
+   n+n'+2 == matrixExprDepth (branchingStack n n')
+
+prop_subexpr_count_fork :: Positive Int -> Positive Int -> Bool
+prop_subexpr_count_fork (Positive n) (Positive n') =
+   n+2*n'+3 == (length $ matrixSubExprs (branchingStack n n'))
 
 -- matrixExprDimensions tests:
 dummy_var_dims s = (-1, -1)
