@@ -5,6 +5,15 @@ module MatrixGrammar (
   matrixExprDimensions, evaluateMatrixExpr) where
 import Control.Applicative
 import Data.Matrix
+import Data.Maybe
+import Data.Tree
+import qualified Data.List as List
+
+instance Ord a => Ord (Matrix a) where
+  compare m m' | (nrows m) /= (nrows m') = compare (nrows m) (nrows m')
+  compare m m' | (ncols m) /= (ncols m') = compare (ncols m) (ncols m')
+  compare m m' = compare (elements m) (elements m') where
+    elements m = [m!(r,c) | r <- [1..(nrows m)], c <- [1..(ncols m)]]
 
 data MatrixExpr =
     Variable String
@@ -17,6 +26,8 @@ data MatrixExpr =
   | Sum MatrixExpr MatrixExpr
   | MatrixMultiply MatrixExpr MatrixExpr
   | ElementwiseMultiply MatrixExpr MatrixExpr
+  deriving (Show,Ord,Eq)
+
 
 -- matrixExprDimensions takes a matrix expression and dimensions for all of its
 -- variables and returns:
@@ -42,6 +53,7 @@ matrixExprDimensions expr varDims = iter expr where
   sameDimensions _ _ = Nothing
 
 -- Evaluate matrix expression mod p
+
 evaluateMatrixExpr :: MatrixExpr -> (String -> Matrix Int) -> Int -> Matrix Int
 evaluateMatrixExpr expr env p = f expr where
   f expr = fmap (`mod`p) (g expr)
@@ -55,3 +67,48 @@ evaluateMatrixExpr expr env p = f expr where
   g (Sum e1 e2) = elementwise (+) (f e1) (f e2)
   g (ElementwiseMultiply e1 e2) = elementwise (*) (f e1) (f e2)
   g (MatrixMultiply e1 e2) = multStd (f e1) (f e2)
+
+-- Valid expressions
+matrixExprTreeView :: MatrixExpr -> Tree MatrixExpr
+matrixExprTreeView = unfoldTree (\x -> (x, children x)) where
+  children (Variable v) = []
+  children (Value v) = []
+  children (Transpose e) = [e]
+  children (RowSum e) = [e]
+  children (ColSum e) = [e]
+  children (RowRepeat rr e) = [e]
+  children (ColRepeat cc e) = [e]
+  children (Sum e1 e2) = [e1, e2]
+  children (ElementwiseMultiply e1 e2) = [e1, e2]
+  children (MatrixMultiply e1 e2) = [e1, e2]
+
+matrixExprSyntaxTree = (fmap f) . matrixExprTreeView where
+  f (Variable v) = v
+  f (Value m) = show m
+  f (Transpose _) = "T"
+  f (RowSum _) = "rowsum"
+  f (ColSum _) = "colsum"
+  f (RowRepeat rr _) = "rowrep:" ++ (show rr)
+  f (ColRepeat cc _) = "colrep:" ++ (show cc)
+  f (Sum _ _) = "+"
+  f (ElementwiseMultiply _ _) = ".*"
+  f (MatrixMultiply _ _) = "*"
+
+matrixExprDepth :: MatrixExpr -> Int
+matrixExprDepth = length . levels . matrixExprTreeView
+matrixSubExprs :: MatrixExpr -> [MatrixExpr]
+matrixSubExprs = flatten . matrixExprTreeView
+
+validOneVariableExpr :: (Int, Int) -> Int -> [MatrixExpr]
+validOneVariableExpr _ 1 = [(Variable "a")]
+validOneVariableExpr dims n | n > 1 = result where
+  result = map head $ List.group $ List.sort $ unsorted_result
+  unsorted_result = previous ++ (filter goodExpr $ unary_exprs ++ binary_exprs)
+  previous = validOneVariableExpr dims (n-1)
+  unary_ops = [Transpose, RowSum, ColSum,
+      RowRepeat 2, RowRepeat 3, ColRepeat 2, ColRepeat 3]
+  varDims "a" = dims
+  goodExpr e = (matrixExprDepth e <= n) && isJust (matrixExprDimensions e varDims)
+  binary_ops = [Sum, ElementwiseMultiply, MatrixMultiply]
+  unary_exprs = [op x | op <- unary_ops, x <- previous]
+  binary_exprs = [op x y | op <- binary_ops, x <- previous, y <- previous]
