@@ -2,7 +2,9 @@ module MatrixGrammar (
   MatrixExpr(Variable,Value,
              Transpose,RowSum,ColSum,RowRepeat,ColRepeat,
              Sum,MatrixMultiply,ElementwiseMultiply),
-  matrixExprDimensions, evaluateMatrixExpr) where
+  matrixExprDepth, matrixSubExprs, drawMatrixExpr,
+  matrixExprDimensions, evaluateMatrixExpr,
+  ) where
 import Control.Applicative
 import Data.Matrix
 import Data.Maybe
@@ -28,6 +30,39 @@ data MatrixExpr =
   | ElementwiseMultiply MatrixExpr MatrixExpr
   deriving (Show,Ord,Eq)
 
+-- Conversion to Data.Tree and related operations
+matrixExprTreeView :: MatrixExpr -> Tree MatrixExpr
+matrixExprTreeView = unfoldTree (\x -> (x, children x)) where
+  children (Variable v) = []
+  children (Value v) = []
+  children (Transpose e) = [e]
+  children (RowSum e) = [e]
+  children (ColSum e) = [e]
+  children (RowRepeat rr e) = [e]
+  children (ColRepeat cc e) = [e]
+  children (Sum e1 e2) = [e1, e2]
+  children (ElementwiseMultiply e1 e2) = [e1, e2]
+  children (MatrixMultiply e1 e2) = [e1, e2]
+
+matrixExprDepth :: MatrixExpr -> Int
+matrixExprDepth = length . levels . matrixExprTreeView
+
+matrixSubExprs :: MatrixExpr -> [MatrixExpr]
+matrixSubExprs = flatten . matrixExprTreeView
+
+-- drawMatrixExpr is for printing out pretty pictures of expression trees
+drawMatrixExpr :: MatrixExpr -> String
+drawMatrixExpr = drawTree . (fmap f) . matrixExprTreeView where
+  f (Variable v) = v
+  f (Value m) = show m
+  f (Transpose _) = "T"
+  f (RowSum _) = "rowsum"
+  f (ColSum _) = "colsum"
+  f (RowRepeat rr _) = "rowrep:" ++ (show rr)
+  f (ColRepeat cc _) = "colrep:" ++ (show cc)
+  f (Sum _ _) = "sum"
+  f (ElementwiseMultiply _ _) = "elt-prod"
+  f (MatrixMultiply _ _) = "prod"
 
 -- matrixExprDimensions takes a matrix expression and dimensions for all of its
 -- variables and returns:
@@ -68,38 +103,6 @@ evaluateMatrixExpr expr env p = f expr where
   g (ElementwiseMultiply e1 e2) = elementwise (*) (f e1) (f e2)
   g (MatrixMultiply e1 e2) = multStd (f e1) (f e2)
 
--- Generic Tree operations
-matrixExprTreeView :: MatrixExpr -> Tree MatrixExpr
-matrixExprTreeView = unfoldTree (\x -> (x, children x)) where
-  children (Variable v) = []
-  children (Value v) = []
-  children (Transpose e) = [e]
-  children (RowSum e) = [e]
-  children (ColSum e) = [e]
-  children (RowRepeat rr e) = [e]
-  children (ColRepeat cc e) = [e]
-  children (Sum e1 e2) = [e1, e2]
-  children (ElementwiseMultiply e1 e2) = [e1, e2]
-  children (MatrixMultiply e1 e2) = [e1, e2]
-
-matrixExprDepth :: MatrixExpr -> Int
-matrixExprDepth = length . levels . matrixExprTreeView
-
-matrixSubExprs :: MatrixExpr -> [MatrixExpr]
-matrixSubExprs = flatten . matrixExprTreeView
-
-matrixExprSyntaxTree :: MatrixExpr -> Tree String
-matrixExprSyntaxTree = (fmap f) . matrixExprTreeView where
-  f (Variable v) = v
-  f (Value m) = show m
-  f (Transpose _) = "T"
-  f (RowSum _) = "rowsum"
-  f (ColSum _) = "colsum"
-  f (RowRepeat rr _) = "rowrep:" ++ (show rr)
-  f (ColRepeat cc _) = "colrep:" ++ (show cc)
-  f (Sum _ _) = "+"
-  f (ElementwiseMultiply _ _) = ".*"
-  f (MatrixMultiply _ _) = "*"
 
 -- Valid expressions
 validOneVariableExpr :: (Int, Int) -> Int -> [MatrixExpr]

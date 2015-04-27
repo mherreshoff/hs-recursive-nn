@@ -105,6 +105,14 @@ prop_multiply_preserves_det l1 l2 = result == mod (d1*d2) 19 where
   env "a" = m1
   env "b" = m2
 
+-- matrixExprDepth tests
+
+prop_symbol_depth_one :: String -> Bool
+prop_symbol_depth_one s = (1==) $ matrixExprDepth (Variable s)
+
+prop_matrix_depth_one :: [Int] -> Bool
+prop_matrix_depth_one list = (1==) $ matrixExprDepth (Value (list_to_matrix 5 5 list))
+
 
 -- return [] is TemplateHaskell magic to list the properties.
 return []
