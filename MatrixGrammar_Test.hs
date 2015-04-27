@@ -8,6 +8,22 @@ import Test.QuickCheck.Modifiers
   (Positive(Positive), NonEmptyList, getNonEmpty)
 import Test.QuickCheck.All (quickCheckAll)
 
+-- matrixExprDepth tests
+
+prop_symbol_depth_one :: String -> Bool
+prop_symbol_depth_one s = (1==) $ matrixExprDepth (Variable s)
+
+prop_matrix_depth_one :: [Int] -> Bool
+prop_matrix_depth_one list = (1==) $ matrixExprDepth (Value (list_to_matrix 5 5 list))
+
+prop_symbol_sum_depth_two :: String -> String -> Bool
+prop_symbol_sum_depth_two s1 s2 = (2==) $ matrixExprDepth (Sum (Variable s1) (Variable s2))
+
+prob_buildable_depth :: Positive Int -> String -> Bool
+prob_buildable_depth (Positive d) s = (d==) $ matrixExprDepth (build d) where
+  build 1 = Variable s
+  build n | n > 1 = Transpose (build (n-1))
+
 -- matrixExprDimensions tests:
 dummy_var_dims s = (-1, -1)
 
@@ -104,15 +120,6 @@ prop_multiply_preserves_det l1 l2 = result == mod (d1*d2) 19 where
   d2 = (`mod`19) $ detLaplace m2
   env "a" = m1
   env "b" = m2
-
--- matrixExprDepth tests
-
-prop_symbol_depth_one :: String -> Bool
-prop_symbol_depth_one s = (1==) $ matrixExprDepth (Variable s)
-
-prop_matrix_depth_one :: [Int] -> Bool
-prop_matrix_depth_one list = (1==) $ matrixExprDepth (Value (list_to_matrix 5 5 list))
-
 
 -- return [] is TemplateHaskell magic to list the properties.
 return []
