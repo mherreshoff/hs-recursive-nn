@@ -93,8 +93,8 @@ matrixExprDimensions expr varDims = iter expr where
 
 -- Evaluate matrix expression mod p
 
-evaluateMatrixExpr :: MatrixExpr -> (String -> Matrix Int) -> Int -> Matrix Int
-evaluateMatrixExpr expr env p = f expr where
+evaluateMatrixExpr :: (String -> Matrix Int) -> Int -> MatrixExpr -> Matrix Int
+evaluateMatrixExpr env p expr = f expr where
   f expr = fmap (`mod`p) (g expr)
   g (Variable v) = env v
   g (Value m) = m
@@ -128,6 +128,6 @@ bucketExpressionsByEvaluations :: [(String -> Matrix Int)] -> Int -> [MatrixExpr
 
 bucketExpressionsByEvaluations envs p exprs = result where
   evals :: MatrixExpr -> ([Matrix Int], MatrixExpr)
-  evals expr = ([evaluateMatrixExpr expr env p | env <- envs], expr)
+  evals expr = ([evaluateMatrixExpr env p expr | env <- envs], expr)
   result :: [[MatrixExpr]]
   result = map (map snd) $ Exts.groupWith fst $ map evals exprs

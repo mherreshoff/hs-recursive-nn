@@ -108,26 +108,26 @@ list_to_matrix w h l = fromList w h $ cycle (1:l)
 
 prop_even_a_plus_a :: [Int] -> Bool
 prop_even_a_plus_a list = result == (zero 11 7) where
-  result = evaluateMatrixExpr expr env 2
+  result = evaluateMatrixExpr env 2 expr
   expr = (Sum (Variable "a") (Variable "a"))
   env s = list_to_matrix 11 7 list
 
 prop_sums_mod_three :: [Int] -> Bool
 prop_sums_mod_three list = result == (zero (nrows m) (ncols m)) where
-  result = evaluateMatrixExpr expr env 3
+  result = evaluateMatrixExpr env 3 expr
   expr = (Sum (Variable "a") (Sum (Variable "a") (Variable "a")))
   env s = m
   m = list_to_matrix 14 8 list
 
 prop_symetric_a_t_a :: [Int] -> Bool
 prop_symetric_a_t_a list = result == (transpose result) where
-  result = evaluateMatrixExpr expr env 19
+  result = evaluateMatrixExpr env 19 expr
   expr = (MatrixMultiply (Variable "a") (Transpose (Variable "a")))
   env s = list_to_matrix 11 7 list
 
 prop_multiply_preserves_det :: [Int] -> [Int] -> Bool
 prop_multiply_preserves_det l1 l2 = result == mod (d1*d2) 19 where
-  result = (`mod`19) $ detLaplace $ evaluateMatrixExpr expr env 19
+  result = (`mod`19) $ detLaplace $ evaluateMatrixExpr env 19 expr
   expr = MatrixMultiply (Variable "a") (Variable "b")
   m1 = list_to_matrix 5 5 l1
   m2 = list_to_matrix 5 5 l2
