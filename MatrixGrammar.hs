@@ -127,7 +127,9 @@ validOneVariableExpr dims n | n > 1 = result where
 bucketExpressionsByEvaluations :: [(String -> Matrix Int)] -> Int -> [MatrixExpr] -> [[MatrixExpr]]
 
 bucketExpressionsByEvaluations envs p exprs = result where
+  evaluators :: [MatrixExpr -> Matrix Int]
+  evaluators = [evaluateMatrixExpr env p | env <- envs]
   evals :: MatrixExpr -> ([Matrix Int], MatrixExpr)
-  evals expr = ([evaluateMatrixExpr env p expr | env <- envs], expr)
+  evals expr = (($expr) <$> evaluators, expr)
   result :: [[MatrixExpr]]
   result = map (map snd) $ Exts.groupWith fst $ map evals exprs
