@@ -8,7 +8,15 @@ import Data.Tree
 import qualified Data.List as List
 import qualified GHC.Exts as Exts
 
+import Numeric.LinearAlgebra.Array
+import Numeric.LinearAlgebra.Array.Util
+
 import MatrixGrammar
+
+infixl 9 #
+ds # cs = listArray ds cs :: Array Double
+
+sh x = putStr . formatFixed 2 $ x
 
 
 i2m :: Int -> Matrix Int
