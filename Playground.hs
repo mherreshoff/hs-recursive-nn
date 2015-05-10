@@ -26,5 +26,4 @@ a :: MatrixExpr
 a = Variable "a"
 
 repPlus :: MatrixExpr -> Int -> MatrixExpr
-repPlus x 1 = x
-repPlus x n | n > 1 = Sum x (repPlus x (n-1))
+repPlus x n = (iterate (Sum x) x) !! (n-1)
