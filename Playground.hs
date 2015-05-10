@@ -1,4 +1,4 @@
-import MatrixGrammar
+-- This file is to be used as the entry point for ghci for performing little experiments.
 
 import Control.Applicative
 import Data.Function
@@ -7,6 +7,8 @@ import Data.Maybe
 import Data.Tree
 import qualified Data.List as List
 import qualified GHC.Exts as Exts
+
+import MatrixGrammar
 
 
 i2m :: Int -> Matrix Int
