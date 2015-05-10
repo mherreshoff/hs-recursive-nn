@@ -5,12 +5,15 @@ module MatrixGrammar (
   matrixExprDepth, matrixSubExprs, drawMatrixExpr,
   matrixExprDimensions, evaluateMatrixExpr,
   validOneVariableExpr,
+  bucketExpressionsByEvaluations,
   ) where
 import Control.Applicative
+import Data.Function
 import Data.Matrix
 import Data.Maybe
 import Data.Tree
 import qualified Data.List as List
+import qualified GHC.Exts as Exts
 
 instance Ord a => Ord (Matrix a) where
   compare m m' | (nrows m) /= (nrows m') = compare (nrows m) (nrows m')
@@ -119,3 +122,12 @@ validOneVariableExpr dims n | n > 1 = result where
   binary_ops = [Sum, ElementwiseMultiply, MatrixMultiply]
   unary_exprs = [op x | op <- unary_ops, x <- previous]
   binary_exprs = [op x y | op <- binary_ops, x <- previous, y <- previous]
+
+-- Bucket Expressions by Evaluations
+bucketExpressionsByEvaluations :: [(String -> Matrix Int)] -> Int -> [MatrixExpr] -> [[MatrixExpr]]
+
+bucketExpressionsByEvaluations envs p exprs = result where
+  evals :: MatrixExpr -> ([Matrix Int], MatrixExpr)
+  evals expr = ([evaluateMatrixExpr expr env p | env <- envs], expr)
+  result :: [[MatrixExpr]]
+  result = map (map snd) $ Exts.groupWith fst $ map evals exprs
