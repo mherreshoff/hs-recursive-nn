@@ -4,6 +4,7 @@ module MatrixGrammar (
              Sum,MatrixMultiply,ElementwiseMultiply),
   matrixExprDepth, matrixSubExprs, drawMatrixExpr,
   matrixExprDimensions, evaluateMatrixExpr,
+  validOneVariableExpr,
   ) where
 import Control.Applicative
 import Data.Matrix
