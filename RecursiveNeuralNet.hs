@@ -7,11 +7,17 @@ type NodeType = Int;
 
 type NetParameters = NodeType -> Array Double;
 
-evaluationTree :: (a -> [b] -> b) -> (Tree a) -> (Tree b)
+evaluationTree :: (a -> [b] -> b) -> Tree a -> Tree b
 evaluationTree f = iter where
   iter tree = Node result sub_results where
     result = f (rootLabel tree) (map rootLabel sub_results)
     sub_results = map iter (subForest tree)
+
+treeMessageFlow :: (b -> [a] -> ([b], c)) -> b -> Tree a -> Tree c
+treeMessageFlow f = iter where
+  iter message tree = Node result sub_results where
+    (sub_messages, result) = f message (map rootLabel (subForest tree))
+    sub_results = zipWith iter sub_messages (subForest tree)
 
 -- NodeType has to map to an array of dimension one higher than the arity of the node.
 evalNet :: NetParameters -> Tree NodeType -> Tree (Array Double)
@@ -22,5 +28,3 @@ evalNet params = evaluationTree (sigmoid.product.params) where
      zipWith (!) vecs $ map (:[]) letters
   sigmoid :: Array Double -> Array Double
   sigmoid = fmap (\x -> 1.0 / (1.0 + exp (0.0-x)))
-    
-
