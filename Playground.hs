@@ -2,7 +2,7 @@
 
 import Control.Applicative
 import Data.Function
-import Data.Matrix
+import qualified Data.Matrix as M
 import Data.Maybe
 import Data.Tree
 import qualified Data.List as List
@@ -19,7 +19,7 @@ ds # cs = listArray ds cs :: Array Double
 sh x = putStr . formatFixed 2 $ x
 
 
-i2m :: Int -> Matrix Int
+i2m :: Int -> M.Matrix Int
 i2m x = matrix 1 1 (const x)
 
 a :: MatrixExpr
