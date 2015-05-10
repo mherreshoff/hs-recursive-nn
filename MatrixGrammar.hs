@@ -9,21 +9,21 @@ module MatrixGrammar (
   ) where
 import Control.Applicative
 import Data.Function
-import Data.Matrix
+import qualified Data.Matrix as M
 import Data.Maybe
 import Data.Tree
 import qualified Data.List as List
 import qualified GHC.Exts as Exts
 
-instance Ord a => Ord (Matrix a) where
-  compare m m' | (nrows m) /= (nrows m') = compare (nrows m) (nrows m')
-  compare m m' | (ncols m) /= (ncols m') = compare (ncols m) (ncols m')
+instance Ord a => Ord (M.Matrix a) where
+  compare m m' | (M.nrows m) /= (M.nrows m') = compare (M.nrows m) (M.nrows m')
+  compare m m' | (M.ncols m) /= (M.ncols m') = compare (M.ncols m) (M.ncols m')
   compare m m' = compare (elements m) (elements m') where
-    elements m = [m!(r,c) | r <- [1..(nrows m)], c <- [1..(ncols m)]]
+    elements m = [m M.!(r,c) | r <- [1..(M.nrows m)], c <- [1..(M.ncols m)]]
 
 data MatrixExpr =
     Variable String
-  | Value (Matrix Int)
+  | Value (M.Matrix Int)
   | Transpose MatrixExpr
   | RowSum MatrixExpr
   | ColSum MatrixExpr
@@ -75,7 +75,7 @@ drawMatrixExpr = drawTree . (fmap f) . matrixExprTreeView where
 matrixExprDimensions :: MatrixExpr -> (String -> (Int, Int)) -> Maybe (Int, Int)
 matrixExprDimensions expr varDims = iter expr where
   iter (Variable v) = Just $ varDims v
-  iter (Value m) = Just $ (nrows m, ncols m)
+  iter (Value m) = Just $ (M.nrows m, M.ncols m)
   iter (Transpose x) = (\(r, c) -> (c, r)) <$> iter x
   iter (RowSum x) = (\(r, c) -> (1, c)) <$> iter x
   iter (ColSum x) = (\(r, c) -> (r, 1)) <$> iter x
@@ -93,19 +93,19 @@ matrixExprDimensions expr varDims = iter expr where
 
 -- Evaluate matrix expression mod p
 
-evaluateMatrixExpr :: (String -> Matrix Int) -> Int -> MatrixExpr -> Matrix Int
+evaluateMatrixExpr :: (String -> M.Matrix Int) -> Int -> MatrixExpr -> M.Matrix Int
 evaluateMatrixExpr env p expr = f expr where
   f expr = fmap (`mod`p) (g expr)
   g (Variable v) = env v
   g (Value m) = m
-  g (Transpose e) = transpose $ f e
-  g (RowSum e) = let m = f e in multStd (matrix 1 (nrows m) (const 1)) m
-  g (ColSum e) = let m = f e in multStd m (matrix (ncols m) 1 (const 1))
-  g (RowRepeat rr e) = let m = f e in matrix rr (ncols m) (\(r, c) -> m!(1, c))
-  g (ColRepeat cc e) = let m = f e in matrix (nrows m) cc (\(r, c) -> m!(r, 1))
-  g (Sum e1 e2) = elementwise (+) (f e1) (f e2)
-  g (ElementwiseMultiply e1 e2) = elementwise (*) (f e1) (f e2)
-  g (MatrixMultiply e1 e2) = multStd (f e1) (f e2)
+  g (Transpose e) = M.transpose $ f e
+  g (RowSum e) = let m = f e in M.multStd (M.matrix 1 (M.nrows m) (const 1)) m
+  g (ColSum e) = let m = f e in M.multStd m (M.matrix (M.ncols m) 1 (const 1))
+  g (RowRepeat rr e) = let m = f e in M.matrix rr (M.ncols m) (\(r, c) -> m M.!(1, c))
+  g (ColRepeat cc e) = let m = f e in M.matrix (M.nrows m) cc (\(r, c) -> m M.!(r, 1))
+  g (Sum e1 e2) = M.elementwise (+) (f e1) (f e2)
+  g (ElementwiseMultiply e1 e2) = M.elementwise (*) (f e1) (f e2)
+  g (MatrixMultiply e1 e2) = M.multStd (f e1) (f e2)
 
 
 -- Valid expressions
@@ -124,12 +124,12 @@ validOneVariableExpr dims n | n > 1 = result where
   binary_exprs = [op x y | op <- binary_ops, x <- previous, y <- previous]
 
 -- Bucket Expressions by Evaluations
-bucketExpressionsByEvaluations :: [(String -> Matrix Int)] -> Int -> [MatrixExpr] -> [[MatrixExpr]]
+bucketExpressionsByEvaluations :: [(String -> M.Matrix Int)] -> Int -> [MatrixExpr] -> [[MatrixExpr]]
 
 bucketExpressionsByEvaluations envs p exprs = result where
-  evaluators :: [MatrixExpr -> Matrix Int]
+  evaluators :: [MatrixExpr -> M.Matrix Int]
   evaluators = [evaluateMatrixExpr env p | env <- envs]
-  evals :: MatrixExpr -> ([Matrix Int], MatrixExpr)
+  evals :: MatrixExpr -> ([M.Matrix Int], MatrixExpr)
   evals expr = (($expr) <$> evaluators, expr)
   result :: [[MatrixExpr]]
   result = map (map snd) $ Exts.groupWith fst $ map evals exprs
