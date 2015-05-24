@@ -32,7 +32,13 @@ printArbTree = do
   tree <- generate (arbitrary :: Gen (Tree Int))
   putStrLn $ drawTree $ fmap show tree
 
--- Tests for EvaluationTree
+-- Tests for metaTree
+
+prop_meta_tree_labels_make_tree :: Tree Int -> Bool
+prop_meta_tree_labels_make_tree tree =
+  tree == fmap rootLabel (metaTree tree)
+
+-- Tests for evaluationTree
 prop_node_count_evaluator :: Tree Int -> Bool
 prop_node_count_evaluator tree =
   rootLabel (evaluationTree (\x ys -> 1 + (sum ys)) tree) == length (flatten tree)
