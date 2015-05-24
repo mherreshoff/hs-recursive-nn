@@ -21,7 +21,7 @@ sh x = putStr . formatFixed 2 $ x
 
 
 i2m :: Int -> M.Matrix Int
-i2m x = matrix 1 1 (const x)
+i2m x = M.matrix 1 1 (const x)
 
 a :: MatrixExpr
 a = Variable "a"
