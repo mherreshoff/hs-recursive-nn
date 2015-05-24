@@ -1,3 +1,11 @@
+import Numeric.LinearAlgebra.Array
+import Numeric.LinearAlgebra.Array.Util
+import TreeUtil
+
+type NodeType = Int;
+
+type NetParameters = NodeType -> Array Double;
+
 -- TODO(mherreshoff): get this to work.
 -- NodeType has to map to an array of dimension one higher than the arity of the node.
 -- evalNet :: NetParameters -> Tree NodeType -> Tree (Array Double)

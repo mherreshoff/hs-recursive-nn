@@ -3,12 +3,6 @@ module TreeUtil (
   ) where
 import Data.Tree
 import Data.Traversable
-import Numeric.LinearAlgebra.Array
-import Numeric.LinearAlgebra.Array.Util
-
-type NodeType = Int;
-
-type NetParameters = NodeType -> Array Double;
 
 metaTree :: Tree a -> Tree (Tree a)
 metaTree = unfoldTree (\t -> (t, (subForest t)))
