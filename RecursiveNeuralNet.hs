@@ -1,3 +1,6 @@
+module RecursiveNeuralNet (
+  evaluationTree, treeMessageFlow
+  ) where
 import Data.Tree
 import Data.Traversable
 import Numeric.LinearAlgebra.Array
@@ -19,12 +22,13 @@ treeMessageFlow f = iter where
     (sub_messages, result) = f message (map rootLabel (subForest tree))
     sub_results = zipWith iter sub_messages (subForest tree)
 
+-- TODO(mherreshoff): get this to work.
 -- NodeType has to map to an array of dimension one higher than the arity of the node.
-evalNet :: NetParameters -> Tree NodeType -> Tree (Array Double)
-evalNet params = evaluationTree (sigmoid.product.params) where
-  letters = ['a'..'z']
-  product :: Array Double -> [Array Double] -> Array Double
-  product arr vecs = (!"1") $ foldl (*) (arr!letters) $
-     zipWith (!) vecs $ map (:[]) letters
-  sigmoid :: Array Double -> Array Double
-  sigmoid = fmap (\x -> 1.0 / (1.0 + exp (0.0-x)))
+-- evalNet :: NetParameters -> Tree NodeType -> Tree (Array Double)
+-- evalNet params = evaluationTree (sigmoid.product.params) where
+--   letters = ['a'..'z']
+--   product :: Array Double -> [Array Double] -> Array Double
+--   product arr vecs = (!"1") $ foldl (*) (arr!letters) $
+--      zipWith (!) vecs $ map (:[]) letters
+--   sigmoid :: Array Double -> Array Double
+--   sigmoid = fmap (\x -> 1.0 / (1.0 + exp (0.0-x)))
