@@ -19,10 +19,11 @@ evaluationTree f = iter where
     result = f (rootLabel tree) (map rootLabel sub_results)
     sub_results = map iter (subForest tree)
 
-treeMessageFlow :: (b -> [a] -> ([b], c)) -> b -> Tree a -> Tree c
-treeMessageFlow f = iter where
-  iter message tree = Node result sub_results where
-    (sub_messages, result) = f message (map rootLabel (subForest tree))
-    sub_results = zipWith iter sub_messages (subForest tree)
-
+-- treeMessageFlow types:
+-- 'a' - the type of the input tree
+-- 'b' - the type of the message
+-- 'c' - the type of the output
+treeMessageFlow :: (b -> a -> (b, c)) -> b -> Tree a -> Tree c
+treeMessageFlow flow message tree = unfoldTree builder (message, tree) where
+  builder (m, (Node r xs)) = (r', [(m', x) | x <- xs]) where (m', r') = flow m r
 

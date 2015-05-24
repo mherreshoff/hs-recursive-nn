@@ -51,6 +51,17 @@ prop_node_sum_evaluator_sub_eval tree =
   sumTree tree == fmap (rootLabel.sumTree) (metaTree tree) where
   sumTree t = evaluationTree (\x ys -> x + (sum ys)) t
 
+-- Tests for treeMessageFlow
+pathSum :: Tree Int -> Tree Int
+pathSum = treeMessageFlow (\s n -> (s+n, s+n)) 0
+
+deltaFromParent :: Tree Int -> Tree Int
+deltaFromParent = treeMessageFlow (\p n -> (n, n-p)) 0
+
+prop_sum_then_delta_is_id :: Tree Int -> Bool
+prop_sum_then_delta_is_id tree =
+  tree == deltaFromParent (pathSum tree)
+
 
 -- return [] is TemplateHaskell magic to list the properties.
 return []
