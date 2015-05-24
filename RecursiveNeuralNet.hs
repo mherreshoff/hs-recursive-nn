@@ -34,3 +34,5 @@ evalNet squash params tree = evaluationTree eval tree where
   letters :: [Char]
   letters = ['a'..'z']
 
+-- TODO(marcelloh): Implement evalNetGradient.
+-- evalNetGradient :: (Double -> Double) -> NetParams -> Tree NodeType -> Tree (NodeType, Array Double)
