@@ -12,6 +12,7 @@ import Numeric.LinearAlgebra.Array
 import Numeric.LinearAlgebra.Array.Util
 
 import MatrixGrammar
+import TreeUtil
 
 infixl 9 #
 ds # cs = listArray ds cs :: Array Double
