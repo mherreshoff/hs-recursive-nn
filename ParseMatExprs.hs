@@ -1,9 +1,9 @@
 -- Printer / parser for MatrixExprs.
---
+module ParseMatExprs(exprOfStr, exprOfStr', parseExpr) where
 
 import Text.Parsec
 import Text.Parsec.Char
-import Text.Parsec.Combinator (between)
+import Text.Parsec.Combinator (between, chainl1)
 import Text.Parsec.Error(ParseError)
 import MatrixGrammar
 
@@ -16,8 +16,8 @@ exprOfStr s = parse parseExpr "exprOfStr" s
 
 -- Either returns a nice expression, or throws a runtime parse error.
 -- Use at testing or fiddling-with time; not in solid code.
-exprOfStr! :: [Char] -> MatrixExpr
-exprOfStr! s = case parse parseExpr "exprOfStr!" s of
+exprOfStr' :: [Char] -> MatrixExpr
+exprOfStr' s = case exprOfStr s of
   Left err -> error $
               "Failed to parse \n    \"" ++ show s
               ++ "\"\nas a matrix expression: " ++ show err
@@ -27,33 +27,40 @@ exprOfStr! s = case parse parseExpr "exprOfStr!" s of
 parseExpr :: Parser MatrixExpr
 parseExpr = expr
 
+-- Toplevel expression. A sum of one or more terms.
+expr = chainl1 term plus_op <?> "matrix expression"
+  where plus_op = do sym "+"; return Sum
 
--- You really don't want to export anything below this line.
-expr = try( do left <- term; sym "+"; right <- expr;
-               return $ Sum left right )
-   <|> term
-   <?> "matrix expression"
+-- Term. The product of one or more "transatom"s.
+term = chainl1 transatom mul_op <?> "term of matrix expression"
+  where mul_op = do
+          s <- (string "*" <|> string ".*")
+          spaces
+          case s of
+           "*" -> return MatrixMultiply
+           ".*" -> return ElementwiseMultiply
+       
+-- Transatom. 
+transatom = try( do m <- atom; sym "'"; return $ Transpose m )
+        <|> atom
+        <?> "possibly-transposed atom of matrix expression"
 
-term = try( do left <- atom; sym "*"; right <- term;
-               return $ MatrixMultiply left right )
-   <|> try( do left <- atom; sym ".*"; right <- term;
-               return $ ElementwiseMultiply left right )
-   <|> try( do m <- atom; sym "'"; return $ Transpose m )
-   <|> atom
-   <?> "term of matrix expression"
-
+-- Atom. A bottom-most expression in the matrix expression tree.
 atom = do sym "rowsum"; x <- parens expr; return $ RowSum x
    <|> do sym "colsum"; x <- parens expr; return $ ColSum x
-   <|> do sym "rowrep"; n <- integer; sym ","; x <- parens expr;
+   <|> do sym "rowrep"; sym "("; n <- integer; sym ","; x <- expr; sym ")";
           return $ RowRepeat n x
-   <|> do sym "colrep"; n <- integer; sym ","; x <- parens expr;
+   <|> do sym "colrep"; sym "("; n <- integer; sym ","; x <- expr; sym ")";
           return $ ColRepeat n x
-   <|> variable
+   <|> parens expr
+   <|> do s <- variable; return $ Variable s
+   <?> "atom of matrix expression"
 
 -- Whitespace-eating tokenizers, low-level parsing pieces.
+-- TODO: read constant matrices.
 
 sym :: [Char] -> Parser ()
-sym s = do string sym; spaces
+sym s = try( do string s; spaces )
 
 inSyms :: [Char] -> [Char] -> Parser a -> Parser a
 inSyms begin end p = do sym begin; out <- p; sym end; spaces; return out
@@ -61,10 +68,12 @@ inSyms begin end p = do sym begin; out <- p; sym end; spaces; return out
 parens = inSyms "(" ")"
 braces = inSyms "[" "]"
 
-integer = pInt :: Parser Int
+integer :: Parser Int
 integer = do s <- many1 digit; spaces; return (read s)
 
 variable :: Parser String
-variable = do head <- letter; tail <- many (alphaNum <|> (oneOf "_")); spaces;
-           return (head:tail)
+variable = do head <- letter
+              tail <- many (alphaNum <|> (oneOf "_"))
+              spaces
+              return (head : tail)
 
