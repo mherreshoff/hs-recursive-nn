@@ -12,6 +12,7 @@ import Numeric.LinearAlgebra.Array
 import Numeric.LinearAlgebra.Array.Util
 
 import MatrixGrammar
+import TreeUtil
 
 infixl 9 #
 ds # cs = listArray ds cs :: Array Double
@@ -20,7 +21,7 @@ sh x = putStr . formatFixed 2 $ x
 
 
 i2m :: Int -> M.Matrix Int
-i2m x = matrix 1 1 (const x)
+i2m x = M.matrix 1 1 (const x)
 
 a :: MatrixExpr
 a = Variable "a"

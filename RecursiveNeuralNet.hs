@@ -1,30 +1,38 @@
+module RecursiveNeuralNet (
+  sigmoid,
+  elementwiseOp,
+  NodeType,
+  NetParameters,
+  evalNet,
+  ) where
+
 import Data.Tree
-import Data.Traversable
+import qualified Data.Vector.Storable as V
 import Numeric.LinearAlgebra.Array
 import Numeric.LinearAlgebra.Array.Util
+import TreeUtil
 
 type NodeType = Int;
 
 type NetParameters = NodeType -> Array Double;
 
-evaluationTree :: (a -> [b] -> b) -> Tree a -> Tree b
-evaluationTree f = iter where
-  iter tree = Node result sub_results where
-    result = f (rootLabel tree) (map rootLabel sub_results)
-    sub_results = map iter (subForest tree)
+elementwiseOp :: (Coord a, Coord b) => (a -> b) -> NArray i a -> NArray i b
+elementwiseOp f = mapArray (V.map f)
 
-treeMessageFlow :: (b -> [a] -> ([b], c)) -> b -> Tree a -> Tree c
-treeMessageFlow f = iter where
-  iter message tree = Node result sub_results where
-    (sub_messages, result) = f message (map rootLabel (subForest tree))
-    sub_results = zipWith iter sub_messages (subForest tree)
+sigmoid :: Double -> Double
+sigmoid x = 1.0 / (1.0 + exp (0.0-x))
 
 -- NodeType has to map to an array of dimension one higher than the arity of the node.
-evalNet :: NetParameters -> Tree NodeType -> Tree (Array Double)
-evalNet params = evaluationTree (sigmoid.product.params) where
-  letters = ['a'..'z']
+-- squash ought to be a function that maps reals into the [0,1] range (e.g. sigmoid)
+evalNet :: (Double -> Double) -> NetParameters -> Tree NodeType -> Tree (Array Double)
+evalNet squash params tree = evaluationTree eval tree where
+  eval :: NodeType -> [Array Double] -> Array Double
+  eval id children = elementwiseOp squash $ product (params id) children
   product :: Array Double -> [Array Double] -> Array Double
   product arr vecs = (!"1") $ foldl (*) (arr!letters) $
      zipWith (!) vecs $ map (:[]) letters
-  sigmoid :: Array Double -> Array Double
-  sigmoid = fmap (\x -> 1.0 / (1.0 + exp (0.0-x)))
+  letters :: [Char]
+  letters = ['a'..'z']
+
+-- TODO(marcelloh): Implement evalNetGradient.
+-- evalNetGradient :: (Double -> Double) -> NetParams -> Tree NodeType -> Tree (NodeType, Array Double)
