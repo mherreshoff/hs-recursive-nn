@@ -7,7 +7,7 @@ import Test.QuickCheck.Gen
 
 import Control.Applicative
 import Data.Tree
-import RecursiveNeuralNet
+import TreeUtil
 
 -- evaluationTree tests
 
@@ -25,10 +25,14 @@ instance (Arbitrary a) => Arbitrary (Tree a) where
   arbitrary = frequency $ zip [1..] (map arbitraryTreeWithDepth [1..5])
   shrink _ = []
 
+-- printArbTree prints out one arbitrary tree of ints to give you an idea of what samples
+-- look like
+printArbTree :: IO ()
 printArbTree = do
   tree <- generate (arbitrary :: Gen (Tree Int))
   putStrLn $ drawTree $ fmap show tree
 
+-- Tests for EvaluationTree
 prop_node_count_evaluator :: Tree Int -> Bool
 prop_node_count_evaluator tree =
   rootLabel (evaluationTree (\x ys -> 1 + (sum ys)) tree) == length (flatten tree)
@@ -36,6 +40,8 @@ prop_node_count_evaluator tree =
 prop_node_sum_evaluator :: Tree Int -> Bool
 prop_node_sum_evaluator tree =
   rootLabel (evaluationTree (\x ys -> x + (sum ys)) tree) == sum (flatten tree)
+
+
 
 -- return [] is TemplateHaskell magic to list the properties.
 return []
