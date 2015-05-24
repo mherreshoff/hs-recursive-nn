@@ -59,10 +59,10 @@ prop_node_sum_evaluator_sub_eval tree =
 
 -- Tests for treeMessageFlow
 pathSum :: Tree Int -> Tree Int
-pathSum = treeMessageFlow (\s n -> (s+n, s+n)) 0
+pathSum = treeMessageFlow (\s n -> (repeat (s+n), s+n)) 0
 
 deltaFromParent :: Tree Int -> Tree Int
-deltaFromParent = treeMessageFlow (\p n -> (n, n-p)) 0
+deltaFromParent = treeMessageFlow (\p n -> (repeat n, n-p)) 0
 
 prop_sum_then_delta_is_id :: Tree Int -> Bool
 prop_sum_then_delta_is_id tree =

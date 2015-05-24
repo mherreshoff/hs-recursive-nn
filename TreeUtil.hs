@@ -20,7 +20,7 @@ evaluationTree f = iter where
 -- 'a' - the type of the input tree
 -- 'b' - the type of the message
 -- 'c' - the type of the output
-treeMessageFlow :: (b -> a -> (b, c)) -> b -> Tree a -> Tree c
+treeMessageFlow :: (b -> a -> ([b], c)) -> b -> Tree a -> Tree c
 treeMessageFlow flow message tree = unfoldTree builder (message, tree) where
-  builder (m, (Node r xs)) = (r', [(m', x) | x <- xs]) where (m', r') = flow m r
+  builder (m, (Node r xs)) = (r', zip ms xs) where (ms, r') = flow m r
 
