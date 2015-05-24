@@ -47,6 +47,9 @@ prop_node_sum_evaluator :: Tree Int -> Bool
 prop_node_sum_evaluator tree =
   rootLabel (evaluationTree (\x ys -> x + (sum ys)) tree) == sum (flatten tree)
 
+prop_node_sum_evaluator_sub_eval tree =
+  sumTree tree == fmap (rootLabel.sumTree) (metaTree tree) where
+  sumTree t = evaluationTree (\x ys -> x + (sum ys)) t
 
 
 -- return [] is TemplateHaskell magic to list the properties.
