@@ -1,8 +1,11 @@
 module TreeUtil (
-  metaTree, evaluationTree, treeMessageFlow
+  zipTrees, metaTree, evaluationTree, treeMessageFlow
   ) where
 import Data.Tree
 import Data.Traversable
+
+zipTrees :: Tree a -> Tree b -> Tree (a, b)
+zipTrees (Node a as) (Node b bs) = Node (a, b) (zipWith zipTrees as bs)
 
 metaTree :: Tree a -> Tree (Tree a)
 metaTree = unfoldTree (\t -> (t, (subForest t)))

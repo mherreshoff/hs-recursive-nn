@@ -32,6 +32,12 @@ printArbTree = do
   tree <- generate (arbitrary :: Gen (Tree Int))
   putStrLn $ drawTree $ fmap show tree
 
+-- Tests for zipTree
+treeSize = length.flatten
+prop_zip_tree_fewer_nodes :: Tree Int -> Tree Int -> Bool
+prop_zip_tree_fewer_nodes a b = x <= treeSize a && x <= treeSize b where
+  x = treeSize $ zipTrees a b
+
 -- Tests for metaTree
 
 prop_meta_tree_labels_make_tree :: Tree Int -> Bool
